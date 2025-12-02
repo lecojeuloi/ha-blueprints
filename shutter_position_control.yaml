@@ -1,0 +1,301 @@
+blueprint:
+  name: Shutter Position Control (generic, single notification)
+  description: >
+    EN: Move selected shutters to a target position at a specific time, with optional
+    weekday filter, optional calendar filter, optional starting position filter,
+    and a single customizable notification.  
+    FR: Déplace une sélection de volets vers une position cible à une heure donnée,
+    avec filtrage optionnel par jours de la semaine, filtre calendrier optionnel,
+    filtre optionnel sur la position de départ, et une seule notification
+    personnalisable.
+
+  domain: automation
+
+  input:
+    covers:
+      name: Target shutters / Volets ciblés
+      description: >
+        EN: Shutters controlled by this automation.  
+        FR: Volets qui seront contrôlés par cette automatisation.
+      selector:
+        entity:
+          domain: cover
+          multiple: true
+
+    to_position:
+      name: Target position / Position cible
+      description: >
+        EN: Position to apply to shutters that match the conditions.  
+        FR: Position à appliquer aux volets qui respectent les conditions.
+      default: 40
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    use_from_position:
+      name: Filter by starting position? / Filtrer par position de départ ?
+      description: >
+        EN: If enabled, only shutters currently at the specified starting position
+        will move. If disabled, all selected shutters will move.  
+        FR: Si activé, seuls les volets actuellement à la position de départ
+        spécifiée bougeront. Si désactivé, tous les volets sélectionnés bougeront.
+      default: true
+      selector:
+        boolean: {}
+
+    from_position:
+      name: Starting position (if enabled) / Position de départ (si activée)
+      description: >
+        EN: Only shutters currently at this position will move when
+        "Filter by starting position" is enabled.  
+        FR: Seuls les volets actuellement à cette position bougeront lorsque
+        "Filtrer par position de départ" est activé.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    trigger_time:
+      name: Trigger time / Heure de déclenchement
+      description: >
+        EN: Time at which shutters will be checked and possibly moved.  
+        FR: Heure à laquelle les volets seront vérifiés et éventuellement déplacés.
+      selector:
+        time: {}
+
+    weekdays:
+      name: Weekdays / Jours de la semaine
+      description: >
+        EN: Days on which this automation should run.  
+        FR: Jours durant lesquels cette automatisation doit s'exécuter.
+      default:
+        - mon
+        - tue
+        - wed
+        - thu
+        - fri
+      selector:
+        select:
+          multiple: true
+          options:
+            - mon
+            - tue
+            - wed
+            - thu
+            - fri
+            - sat
+            - sun
+
+    use_calendar:
+      name: Use calendar filter? / Utiliser un filtre calendrier ?
+      description: >
+        EN: If enabled, the automation only runs when the selected calendar
+        is in the required state.  
+        FR: Si activé, l'automatisation ne s'exécute que si le calendrier choisi
+        est dans l'état requis.
+      default: false
+      selector:
+        boolean: {}
+
+    calendar_entity:
+      name: Calendar entity / Entité calendrier
+      description: >
+        EN: Calendar used as an optional filter (e.g. school holidays).  
+        FR: Calendrier utilisé comme filtre optionnel (ex: vacances scolaires).
+      default: ""
+      selector:
+        entity:
+          domain: calendar
+          multiple: false
+
+    calendar_required_state:
+      name: Required calendar state / État requis du calendrier
+      description: >
+        EN: Example: "off" for school days (not holidays).  
+        FR: Exemple: "off" pour les jours d'école (hors vacances).
+      default: "off"
+      selector:
+        text: {}
+
+    enable_notification:
+      name: Enable notification? / Activer la notification ?
+      description: >
+        EN: If enabled, a single notification will be sent with both moved and
+        non-moved shutters.  
+        FR: Si activé, une seule notification sera envoyée avec la liste des
+        volets ayant bougé et ceux n'ayant pas bougé.
+      default: true
+      selector:
+        boolean: {}
+
+    notify_device:
+      name: Notification device / Appareil de notification
+      description: >
+        EN: Mobile device to notify (mobile_app). Required only if notifications
+        are enabled.  
+        FR: Appareil mobile à notifier (mobile_app). Requis uniquement si les
+        notifications sont activées.
+      selector:
+        device:
+          integration: mobile_app
+
+    notify_title:
+      name: Notification title / Titre de la notification
+      description: >
+        EN: Title of the notification.  
+        FR: Titre de la notification.
+      default: Volets / Shutters
+      selector:
+        text: {}
+
+    notify_message_template:
+      name: Notification message template / Modèle du message de notification
+      description: >
+        EN: Template for the notification body. You can use these variables:
+        {{ from_pos }}, {{ to_pos }}, {{ moved_covers }}, {{ not_moved_positions }}.  
+        FR: Modèle pour le corps de la notification. Variables disponibles :
+        {{ from_pos }}, {{ to_pos }}, {{ moved_covers }}, {{ not_moved_positions }}.
+
+        Example (FR):
+        "Ouverture auto à {{ to_pos }}%.
+         Volets ayant bougé:
+         {% for c in moved_covers %}
+           - {{ c }}
+         {% endfor %}
+         Volets n'ayant pas bougé:
+         {% for c, pos in not_moved_positions.items() %}
+           - {{ c }} : {{ pos }}%
+         {% endfor %}"
+
+        Example (EN):
+        "Automatic move to {{ to_pos }}%.
+         Moved shutters:
+         {% for c in moved_covers %}
+           - {{ c }}
+         {% endfor %}
+         Unchanged shutters:
+         {% for c, pos in not_moved_positions.items() %}
+           - {{ c }} ({{ pos }}%)
+         {% endfor %}"
+      default: >
+        Automatic move to {{ to_pos }}%.
+        Moved shutters:
+        {% for c in moved_covers %}
+          - {{ c }}
+        {% endfor %}
+        Unchanged shutters:
+        {% for c, pos in not_moved_positions.items() %}
+          - {{ c }} ({{ pos }}%)
+        {% endfor %}
+      selector:
+        text:
+          multiline: true
+
+mode: single
+
+trigger:
+  - platform: time
+    at: !input trigger_time
+
+conditions:
+  # EN: Weekday filter
+  # FR: Filtre des jours de la semaine
+  - condition: time
+    weekday: !input weekdays
+
+  # EN: Optional calendar filter
+  # FR: Filtre calendrier optionnel
+  - condition: or
+    conditions:
+      # Case 1: calendar filter disabled -> always pass
+      # Cas 1: filtre calendrier désactivé -> passe toujours
+      - condition: template
+        value_template: "{{ not (!input use_calendar) }}"
+      # Case 2: calendar filter enabled -> require matching state
+      # Cas 2: filtre calendrier activé -> état requis
+      - condition: template
+        value_template: >
+          {% if !input use_calendar %}
+            {{ states(!input calendar_entity) == !input calendar_required_state }}
+          {% else %}
+            true
+          {% endif %}
+
+action:
+  - variables:
+      # EN: List of shutter entity_ids from the input
+      # FR: Liste des entity_id des volets depuis l'entrée utilisateur
+      covers: !input covers
+
+      to_pos: !input to_position
+      use_from: !input use_from_position
+      from_pos: !input from_position
+
+      # EN: Determine which shutters will move:
+      #     - if use_from_position = true -> only those at from_pos
+      #     - else -> all covers
+      # FR: Détermine quels volets vont bouger :
+      #     - si use_from_position = true -> seulement ceux à from_pos
+      #     - sinon -> tous les volets
+      moved_covers: >
+        {% if use_from %}
+          {{ expand(covers)
+             | selectattr('attributes.current_position','defined')
+             | selectattr('attributes.current_position','eq', from_pos)
+             | map(attribute='entity_id')
+             | list }}
+        {% else %}
+          {{ covers }}
+        {% endif %}
+
+      # EN: Shutters that do NOT move (for information in the notification)
+      # FR: Volets qui ne bougent PAS (pour information dans la notification)
+      not_moved_covers: >
+        {{ expand(covers)
+           | rejectattr('entity_id','in', moved_covers)
+           | map('attr','entity_id')
+           | list }}
+
+      # EN: Positions of shutters that do NOT move
+      # FR: Positions des volets qui ne bougent pas
+      not_moved_positions: >
+        {% set ns = namespace(out={}) %}
+        {% for c in expand(not_moved_covers) %}
+          {% set ns.out = ns.out
+             | combine({ c.entity_id: c.attributes.current_position | default('n/a') }) %}
+        {% endfor %}
+        {{ ns.out }}
+
+  - choose:
+      - conditions:
+          # EN: Only move if at least one shutter should move
+          # FR: On ne bouge que si au moins un volet doit bouger
+          - condition: template
+            value_template: "{{ moved_covers | length > 0 }}"
+        sequence:
+          # EN: Move all selected/matching shutters to target position
+          # FR: Déplace tous les volets sélectionnés / correspondants vers la position cible
+          - repeat:
+              for_each: "{{ moved_covers }}"
+              sequence:
+                - service: cover.set_cover_position
+                  target:
+                    entity_id: "{{ repeat.item }}"
+                  data:
+                    position: "{{ to_pos }}"
+
+  # EN: Optional single notification (both moved and not moved)
+  # FR: Notification unique optionnelle (volets bougés et non bougés)
+  - if:
+      - condition: template
+        value_template: "{{ !input enable_notification }}"
+    then:
+      - device_id: !input notify_device
+        domain: mobile_app
+        type: notify
+        title: !input notify_title
+        message: !input notify_message_template
