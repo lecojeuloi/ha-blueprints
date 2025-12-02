@@ -25,712 +25,488 @@ input:
       text: {}
 
   ############################################################
-  # SECTION 1 : PRE-OPEN
+  # PRE-OPEN PHASE
   ############################################################
-  pre_open_section:
-    name: "Pré-ouverture / Pre-open"
-    icon: mdi:window-shutter-open
-    collapsed: true
-    input:
+  pre_open_enabled:
+    name: "Activer la phase pré-ouverture / Enable pre-open phase"
+    default: false
+    selector:
+      boolean: {}
 
-      pre_open_enabled:
-        name: "Activer la phase pré-ouverture / Enable pre-open phase"
-        description: >
-          EN: Enable or disable this phase.
-          
-          FR: Active ou désactive cette phase.
-        default: false
-        selector:
-          boolean: {}
+  pre_open_covers:
+    name: "Volets pré-ouverture / Pre-open covers"
+    selector:
+      entity:
+        domain: cover
+        multiple: true
 
-      pre_open_covers:
-        name: "Volets pré-ouverture / Pre-open covers"
-        description: >
-          EN: Shutters controlled by this phase.
-          
-          FR: Volets contrôlés par cette phase.
-        selector:
-          entity:
-            domain: cover
-            multiple: true
+  pre_open_use_from:
+    name: "Filtrer par position de départ ? / Use from position filter?"
+    description: >
+      EN: If enabled, only shutters within [from ± tolerance] will move.
 
-      pre_open_use_from:
-        name: "Filtrer par position de départ ? / Use from position filter?"
-        description: >
-          EN: If enabled, only shutters within [from ± tolerance] will move.
-          
-          FR: Si activé, seuls les volets dans [from ± tolérance] bougeront.
-        default: false
-        selector:
-          boolean: {}
+      FR: Si activé, seuls les volets dans [from ± tolérance] bougeront.
+    default: false
+    selector:
+      boolean: {}
 
-      pre_open_from:
-        name: "From (%) – position de départ"
-        description: >
-          EN: Starting position used when the from filter is enabled.
-          
-          FR: Position de départ utilisée si le filtre from est activé.
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 100
-            unit_of_measurement: "%"
+  pre_open_from:
+    name: "Pré-ouverture - From (%) – position de départ"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 100
+        unit_of_measurement: "%"
 
-      pre_open_from_tolerance:
-        name: "Tolérance from (%)"
-        description: >
-          EN: Allowed deviation around the from position (absolute).
-          
-          FR: Marge de tolérance autour de la position from (valeur absolue).
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 20
-            unit_of_measurement: "%"
+  pre_open_from_tolerance:
+    name: "Pré-ouverture - Tolérance from (%)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 20
+        unit_of_measurement: "%"
 
-      pre_open_to:
-        name: "To (%) – position cible"
-        description: >
-          EN: Target position for this phase.
-          
-          FR: Position cible pour cette phase.
-        default: 40
-        selector:
-          number:
-            min: 0
-            max: 100
-            unit_of_measurement: "%"
+  pre_open_to:
+    name: "Pré-ouverture - To (%) – position cible"
+    default: 40
+    selector:
+      number:
+        min: 0
+        max: 100
+        unit_of_measurement: "%"
 
-      pre_open_use_to_random:
-        name: "Randomiser la position cible ? / Randomize target position?"
-        description: >
-          EN: If enabled, the final position will be randomized around the target.
+  pre_open_use_to_random:
+    name: "Pré-ouverture - Randomiser la position cible ?"
+    default: false
+    selector:
+      boolean: {}
 
-          FR: Si activé, la position finale sera randomisée autour de la cible.
-        default: false
-        selector:
-          boolean: {}
+  pre_open_to_tolerance:
+    name: "Pré-ouverture - Tolérance cible (%)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 20
+        unit_of_measurement: "%"
 
-      pre_open_to_tolerance:
-        name: "Tolérance cible (%)"
-        description: >
-          EN: Random range [to − tol, to + tol] (clamped to 0–100).
-          
-          FR: Plage aléatoire [to − tol, to + tol] (bornée 0–100).
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 20
-            unit_of_measurement: "%"
+  pre_open_time:
+    name: "Pré-ouverture - Heure de déclenchement / Trigger time"
+    selector:
+      time: {}
 
-      pre_open_time:
-        name: "Heure de déclenchement / Trigger time"
-        description: >
-          EN: Base time for this phase (before random delay).
-          
-          FR: Heure de base pour cette phase (avant le retard aléatoire).
-        selector:
-          time: {}
+  pre_open_time_random_minutes:
+    name: "Pré-ouverture - Tolérance d’heure (min) / Time tolerance (min)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 60
+        unit_of_measurement: "min"
 
-      pre_open_time_random_minutes:
-        name: "Tolérance d’heure (min) / Time tolerance (min)"
-        description: >
-          EN: Random delay between 0 and N minutes AFTER the trigger time.
-          
-          FR: Retard aléatoire entre 0 et N minutes APRÈS l’heure de déclenchement.
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 60
-            unit_of_measurement: "min"
-
-      pre_open_weekdays:
-        name: "Jours d’exécution / Weekdays"
-        description: >
-          EN: Days on which this phase is allowed to run.
-          
-          FR: Jours où cette phase peut s’exécuter.
-        default:
+  pre_open_weekdays:
+    name: "Pré-ouverture - Jours d’exécution / Weekdays"
+    default:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+    selector:
+      select:
+        multiple: true
+        options:
           - mon
           - tue
           - wed
           - thu
           - fri
-        selector:
-          select:
-            multiple: true
-            options:
-              - mon
-              - tue
-              - wed
-              - thu
-              - fri
-              - sat
-              - sun
+          - sat
+          - sun
 
-      pre_open_notify_devices:
-        name: "Appareils de notification / Notification devices"
-        description: >
-          EN: mobile_app devices to notify (optional).
+  pre_open_notify_devices:
+    name: "Pré-ouverture - Appareils de notification / Notification devices"
+    default: []
+    selector:
+      device:
+        multiple: true
+        integration: mobile_app
 
-          FR: Appareils mobile_app à notifier (optionnel).
-        default: []
-        selector:
-          device:
-            multiple: true
-            integration: mobile_app
+  pre_open_notify_title:
+    name: "Pré-ouverture - Titre notification / Notification title"
+    default: "Volets – Pré-ouverture"
+    selector:
+      text: {}
 
-      pre_open_notify_title:
-        name: "Titre notification / Notification title"
-        default: "Volets – Pré-ouverture"
-        selector:
-          text: {}
+  pre_open_notify_message:
+    name: "Pré-ouverture - Message notification (préfixe optionnel)"
+    description: >
+      EN: Optional static prefix text for the notification message.
 
-      pre_open_notify_message:
-        name: "Message notification (préfixe) / Notification message (prefix)"
-        description: >
-          EN: Optional static prefix text for the notification message.
-
-          FR: Texte de préfixe optionnel pour le message de notification.
-        default: ""
-        selector:
-          text:
-            multiline: true
+      FR: Texte de préfixe optionnel pour le message de notification.
+    default: ""
+    selector:
+      text:
+        multiline: true
 
   ############################################################
-  # SECTION 2 : OPEN
+  # OPEN PHASE
   ############################################################
-  open_section:
-    name: "Ouverture / Open"
-    icon: mdi:window-shutter-open
-    collapsed: true
-    input:
+  open_enabled:
+    name: "Activer la phase d’ouverture / Enable open phase"
+    default: false
+    selector:
+      boolean: {}
 
-      open_enabled:
-        name: "Activer la phase d’ouverture / Enable open phase"
-        description: >
-          EN: Enable or disable this phase.
-          
-          FR: Active ou désactive cette phase.
-        default: false
-        selector:
-          boolean: {}
+  open_covers:
+    name: "Volets ouverture / Open covers"
+    selector:
+      entity:
+        domain: cover
+        multiple: true
 
-      open_covers:
-        name: "Volets ouverture / Open covers"
-        description: >
-          EN: Shutters controlled by this phase.
-          
-          FR: Volets contrôlés par cette phase.
-        selector:
-          entity:
-            domain: cover
-            multiple: true
+  open_use_from:
+    name: "Ouverture - Filtrer par position de départ ?"
+    default: false
+    selector:
+      boolean: {}
 
-      open_use_from:
-        name: "Filtrer par position de départ ? / Use from position filter?"
-        description: >
-          EN: If enabled, only shutters within [from ± tolerance] will move.
-          
-          FR: Si activé, seuls les volets dans [from ± tolérance] bougeront.
-        default: false
-        selector:
-          boolean: {}
+  open_from:
+    name: "Ouverture - From (%) – position de départ"
+    default: 40
+    selector:
+      number:
+        min: 0
+        max: 100
+        unit_of_measurement: "%"
 
-      open_from:
-        name: "From (%) – position de départ"
-        description: >
-          EN: Starting position used when the from filter is enabled.
-          
-          FR: Position de départ utilisée si le filtre from est activé.
-        default: 40
-        selector:
-          number:
-            min: 0
-            max: 100
-            unit_of_measurement: "%"
+  open_from_tolerance:
+    name: "Ouverture - Tolérance from (%)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 20
+        unit_of_measurement: "%"
 
-      open_from_tolerance:
-        name: "Tolérance from (%)"
-        description: >
-          EN: Allowed deviation around the from position (absolute).
-          
-          FR: Marge de tolérance autour de la position from (valeur absolue).
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 20
-            unit_of_measurement: "%"
+  open_to:
+    name: "Ouverture - To (%) – position cible"
+    default: 100
+    selector:
+      number:
+        min: 0
+        max: 100
+        unit_of_measurement: "%"
 
-      open_to:
-        name: "To (%) – position cible"
-        description: >
-          EN: Target position for this phase.
-          
-          FR: Position cible pour cette phase.
-        default: 100
-        selector:
-          number:
-            min: 0
-            max: 100
-            unit_of_measurement: "%"
+  open_use_to_random:
+    name: "Ouverture - Randomiser la position cible ?"
+    default: false
+    selector:
+      boolean: {}
 
-      open_use_to_random:
-        name: "Randomiser la position cible ? / Randomize target position?"
-        description: >
-          EN: If enabled, the final position will be randomized around the target.
-          
-          FR: Si activé, la position finale sera randomisée autour de la cible.
-        default: false
-        selector:
-          boolean: {}
+  open_to_tolerance:
+    name: "Ouverture - Tolérance cible (%)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 20
+        unit_of_measurement: "%"
 
-      open_to_tolerance:
-        name: "Tolérance cible (%)"
-        description: >
-          EN: Random range [to − tol, to + tol] (clamped to 0–100).
-          
-          FR: Plage aléatoire [to − tol, to + tol] (bornée 0–100).
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 20
-            unit_of_measurement: "%"
+  open_time:
+    name: "Ouverture - Heure de déclenchement / Trigger time"
+    selector:
+      time: {}
 
-      open_time:
-        name: "Heure de déclenchement / Trigger time"
-        description: >
-          EN: Base time for this phase (before random delay).
-          
-          FR: Heure de base pour cette phase (avant le retard aléatoire).
-        selector:
-          time: {}
+  open_time_random_minutes:
+    name: "Ouverture - Tolérance d’heure (min) / Time tolerance (min)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 60
+        unit_of_measurement: "min"
 
-      open_time_random_minutes:
-        name: "Tolérance d’heure (min) / Time tolerance (min)"
-        description: >
-          EN: Random delay between 0 and N minutes AFTER the trigger time.
-          
-          FR: Retard aléatoire entre 0 et N minutes APRÈS l’heure de déclenchement.
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 60
-            unit_of_measurement: "min"
-
-      open_weekdays:
-        name: "Jours d’exécution / Weekdays"
-        description: >
-          EN: Days on which this phase is allowed to run.
-          
-          FR: Jours où cette phase peut s’exécuter.
-        default:
+  open_weekdays:
+    name: "Ouverture - Jours d’exécution / Weekdays"
+    default:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+    selector:
+      select:
+        multiple: true
+        options:
           - mon
           - tue
           - wed
           - thu
           - fri
-        selector:
-          select:
-            multiple: true
-            options:
-              - mon
-              - tue
-              - wed
-              - thu
-              - fri
-              - sat
-              - sun
+          - sat
+          - sun
 
-      open_notify_devices:
-        name: "Appareils de notification / Notification devices"
-        description: >
-          EN: mobile_app devices to notify (optional).
-          
-          FR: Appareils mobile_app à notifier (optionnel).
-        default: []
-        selector:
-          device:
-            multiple: true
-            integration: mobile_app
+  open_notify_devices:
+    name: "Ouverture - Appareils de notification / Notification devices"
+    default: []
+    selector:
+      device:
+        multiple: true
+        integration: mobile_app
 
-      open_notify_title:
-        name: "Titre notification / Notification title"
-        default: "Volets – Ouverture"
-        selector:
-          text: {}
+  open_notify_title:
+    name: "Ouverture - Titre notification / Notification title"
+    default: "Volets – Ouverture"
+    selector:
+      text: {}
 
-      open_notify_message:
-        name: "Message notification (préfixe) / Notification message (prefix)"
-        description: >
-          EN: Optional static prefix text for the notification message.
-          
-          FR: Texte de préfixe optionnel pour le message de notification.
-        default: ""
-        selector:
-          text:
-            multiline: true
+  open_notify_message:
+    name: "Ouverture - Message notification (préfixe optionnel)"
+    default: ""
+    selector:
+      text:
+        multiline: true
 
   ############################################################
-  # SECTION 3 : PRE-CLOSE
+  # PRE-CLOSE PHASE
   ############################################################
-  pre_close_section:
-    name: "Pré-fermeture / Pre-close"
-    icon: mdi:window-shutter
-    collapsed: true
-    input:
+  pre_close_enabled:
+    name: "Activer la phase pré-fermeture / Enable pre-close phase"
+    default: false
+    selector:
+      boolean: {}
 
-      pre_close_enabled:
-        name: "Activer la phase pré-fermeture / Enable pre-close phase"
-        description: >
-          EN: Enable or disable this phase.
-          
-          FR: Active ou désactive cette phase.
-        default: false
-        selector:
-          boolean: {}
+  pre_close_covers:
+    name: "Volets pré-fermeture / Pre-close covers"
+    selector:
+      entity:
+        domain: cover
+        multiple: true
 
-      pre_close_covers:
-        name: "Volets pré-fermeture / Pre-close covers"
-        description: >
-          EN: Shutters controlled by this phase.
-          
-          FR: Volets contrôlés par cette phase.
-        selector:
-          entity:
-            domain: cover
-            multiple: true
+  pre_close_use_from:
+    name: "Pré-fermeture - Filtrer par position de départ ?"
+    default: false
+    selector:
+      boolean: {}
 
-      pre_close_use_from:
-        name: "Filtrer par position de départ ? / Use from position filter?"
-        description: >
-          EN: If enabled, only shutters within [from ± tolerance] will move.
-          
-          FR: Si activé, seuls les volets dans [from ± tolérance] bougeront.
-        default: false
-        selector:
-          boolean: {}
+  pre_close_from:
+    name: "Pré-fermeture - From (%) – position de départ"
+    default: 100
+    selector:
+      number:
+        min: 0
+        max: 100
+        unit_of_measurement: "%"
 
-      pre_close_from:
-        name: "From (%) – position de départ"
-        description: >
-          EN: Starting position used when the from filter is enabled.
-          
-          FR: Position de départ utilisée si le filtre from est activé.
-        default: 100
-        selector:
-          number:
-            min: 0
-            max: 100
-            unit_of_measurement: "%"
+  pre_close_from_tolerance:
+    name: "Pré-fermeture - Tolérance from (%)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 20
+        unit_of_measurement: "%"
 
-      pre_close_from_tolerance:
-        name: "Tolérance from (%)"
-        description: >
-          EN: Allowed deviation around the from position (absolute).
-          
-          FR: Marge de tolérance autour de la position from (valeur absolue).
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 20
-            unit_of_measurement: "%"
+  pre_close_to:
+    name: "Pré-fermeture - To (%) – position cible"
+    default: 40
+    selector:
+      number:
+        min: 0
+        max: 100
+        unit_of_measurement: "%"
 
-      pre_close_to:
-        name: "To (%) – position cible"
-        description: >
-          EN: Target position for this phase.
-          
-          FR: Position cible pour cette phase.
-        default: 40
-        selector:
-          number:
-            min: 0
-            max: 100
-            unit_of_measurement: "%"
+  pre_close_use_to_random:
+    name: "Pré-fermeture - Randomiser la position cible ?"
+    default: false
+    selector:
+      boolean: {}
 
-      pre_close_use_to_random:
-        name: "Randomiser la position cible ? / Randomize target position?"
-        description: >
-          EN: If enabled, the final position will be randomized around the target.
-          
-          FR: Si activé, la position finale sera randomisée autour de la cible.
-        default: false
-        selector:
-          boolean: {}
+  pre_close_to_tolerance:
+    name: "Pré-fermeture - Tolérance cible (%)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 20
+        unit_of_measurement: "%"
 
-      pre_close_to_tolerance:
-        name: "Tolérance cible (%)"
-        description: >
-          EN: Random range [to − tol, to + tol] (clamped to 0–100).
-          
-          FR: Plage aléatoire [to − tol, to + tol] (bornée 0–100).
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 20
-            unit_of_measurement: "%"
+  pre_close_time:
+    name: "Pré-fermeture - Heure de déclenchement / Trigger time"
+    selector:
+      time: {}
 
-      pre_close_time:
-        name: "Heure de déclenchement / Trigger time"
-        description: >
-          EN: Base time for this phase (before random delay).
-          
-          FR: Heure de base pour cette phase (avant le retard aléatoire).
-        selector:
-          time: {}
+  pre_close_time_random_minutes:
+    name: "Pré-fermeture - Tolérance d’heure (min) / Time tolerance (min)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 60
+        unit_of_measurement: "min"
 
-      pre_close_time_random_minutes:
-        name: "Tolérance d’heure (min) / Time tolerance (min)"
-        description: >
-          EN: Random delay between 0 and N minutes AFTER the trigger time.
-          
-          FR: Retard aléatoire entre 0 et N minutes APRÈS l’heure de déclenchement.
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 60
-            unit_of_measurement: "min"
-
-      pre_close_weekdays:
-        name: "Jours d’exécution / Weekdays"
-        description: >
-          EN: Days on which this phase is allowed to run.
-          
-          FR: Jours où cette phase peut s’exécuter.
-        default:
+  pre_close_weekdays:
+    name: "Pré-fermeture - Jours d’exécution / Weekdays"
+    default:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+    selector:
+      select:
+        multiple: true
+        options:
           - mon
           - tue
           - wed
           - thu
           - fri
-        selector:
-          select:
-            multiple: true
-            options:
-              - mon
-              - tue
-              - wed
-              - thu
-              - fri
-              - sat
-              - sun
+          - sat
+          - sun
 
-      pre_close_notify_devices:
-        name: "Appareils de notification / Notification devices"
-        description: >
-          EN: mobile_app devices to notify (optional).
-          
-          FR: Appareils mobile_app à notifier (optionnel).
-        default: []
-        selector:
-          device:
-            multiple: true
-            integration: mobile_app
+  pre_close_notify_devices:
+    name: "Pré-fermeture - Appareils de notification / Notification devices"
+    default: []
+    selector:
+      device:
+        multiple: true
+        integration: mobile_app
 
-      pre_close_notify_title:
-        name: "Titre notification / Notification title"
-        default: "Volets – Pré-fermeture"
-        selector:
-          text: {}
+  pre_close_notify_title:
+    name: "Pré-fermeture - Titre notification / Notification title"
+    default: "Volets – Pré-fermeture"
+    selector:
+      text: {}
 
-      pre_close_notify_message:
-        name: "Message notification (préfixe) / Notification message (prefix)"
-        description: >
-          EN: Optional static prefix text for the notification message.
-
-          FR: Texte de préfixe optionnel pour le message de notification.
-        default: ""
-        selector:
-          text:
-            multiline: true
+  pre_close_notify_message:
+    name: "Pré-fermeture - Message notification (préfixe optionnel)"
+    default: ""
+    selector:
+      text:
+        multiline: true
 
   ############################################################
-  # SECTION 4 : CLOSE
+  # CLOSE PHASE
   ############################################################
-  close_section:
-    name: "Fermeture / Close"
-    icon: mdi:window-shutter
-    collapsed: true
-    input:
+  close_enabled:
+    name: "Activer la phase de fermeture / Enable close phase"
+    default: false
+    selector:
+      boolean: {}
 
-      close_enabled:
-        name: "Activer la phase de fermeture / Enable close phase"
-        description: >
-          EN: Enable or disable this phase.
-          
-          FR: Active ou désactive cette phase.
-        default: false
-        selector:
-          boolean: {}
+  close_covers:
+    name: "Volets fermeture / Close covers"
+    selector:
+      entity:
+        domain: cover
+        multiple: true
 
-      close_covers:
-        name: "Volets fermeture / Close covers"
-        description: >
-          EN: Shutters controlled by this phase.
-          
-          FR: Volets contrôlés par cette phase.
-        selector:
-          entity:
-            domain: cover
-            multiple: true
+  close_use_from:
+    name: "Fermeture - Filtrer par position de départ ?"
+    default: false
+    selector:
+      boolean: {}
 
-      close_use_from:
-        name: "Filtrer par position de départ ? / Use from position filter?"
-        description: >
-          EN: If enabled, only shutters within [from ± tolerance] will move.
-          
-          FR: Si activé, seuls les volets dans [from ± tolérance] bougeront.
-        default: false
-        selector:
-          boolean: {}
+  close_from:
+    name: "Fermeture - From (%) – position de départ"
+    default: 40
+    selector:
+      number:
+        min: 0
+        max: 100
+        unit_of_measurement: "%"
 
-      close_from:
-        name: "From (%) – position de départ"
-        description: >
-          EN: Starting position used when the from filter is enabled.
-          
-          FR: Position de départ utilisée si le filtre from est activé.
-        default: 40
-        selector:
-          number:
-            min: 0
-            max: 100
-            unit_of_measurement: "%"
+  close_from_tolerance:
+    name: "Fermeture - Tolérance from (%)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 20
+        unit_of_measurement: "%"
 
-      close_from_tolerance:
-        name: "Tolérance from (%)"
-        description: >
-          EN: Allowed deviation around the from position (absolute).
-          
-          FR: Marge de tolérance autour de la position from (valeur absolue).
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 20
-            unit_of_measurement: "%"
+  close_to:
+    name: "Fermeture - To (%) – position cible"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 100
+        unit_of_measurement: "%"
 
-      close_to:
-        name: "To (%) – position cible"
-        description: >
-          EN: Target position for this phase.
-          
-          FR: Position cible pour cette phase.
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 100
-            unit_of_measurement: "%"
+  close_use_to_random:
+    name: "Fermeture - Randomiser la position cible ?"
+    default: false
+    selector:
+      boolean: {}
 
-      close_use_to_random:
-        name: "Randomiser la position cible ? / Randomize target position?"
-        description: >
-          EN: If enabled, the final position will be randomized around the target.
-          
-          FR: Si activé, la position finale sera randomisée autour de la cible.
-        default: false
-        selector:
-          boolean: {}
+  close_to_tolerance:
+    name: "Fermeture - Tolérance cible (%)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 20
+        unit_of_measurement: "%"
 
-      close_to_tolerance:
-        name: "Tolérance cible (%)"
-        description: >
-          EN: Random range [to − tol, to + tol] (clamped to 0–100).
-          
-          FR: Plage aléatoire [to − tol, to + tol] (bornée 0–100).
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 20
-            unit_of_measurement: "%"
+  close_time:
+    name: "Fermeture - Heure de déclenchement / Trigger time"
+    selector:
+      time: {}
 
-      close_time:
-        name: "Heure de déclenchement / Trigger time"
-        description: >
-          EN: Base time for this phase (before random delay).
-          
-          FR: Heure de base pour cette phase (avant le retard aléatoire).
-        selector:
-          time: {}
+  close_time_random_minutes:
+    name: "Fermeture - Tolérance d’heure (min) / Time tolerance (min)"
+    default: 0
+    selector:
+      number:
+        min: 0
+        max: 60
+        unit_of_measurement: "min"
 
-      close_time_random_minutes:
-        name: "Tolérance d’heure (min) / Time tolerance (min)"
-        description: >
-          EN: Random delay between 0 and N minutes AFTER the trigger time.
-          
-          FR: Retard aléatoire entre 0 et N minutes APRÈS l’heure de déclenchement.
-        default: 0
-        selector:
-          number:
-            min: 0
-            max: 60
-            unit_of_measurement: "min"
-
-      close_weekdays:
-        name: "Jours d’exécution / Weekdays"
-        description: >
-          EN: Days on which this phase is allowed to run.
-          
-          FR: Jours où cette phase peut s’exécuter.
-        default:
+  close_weekdays:
+    name: "Fermeture - Jours d’exécution / Weekdays"
+    default:
+      - mon
+      - tue
+      - wed
+      - thu
+      - fri
+    selector:
+      select:
+        multiple: true
+        options:
           - mon
           - tue
           - wed
           - thu
           - fri
-        selector:
-          select:
-            multiple: true
-            options:
-              - mon
-              - tue
-              - wed
-              - thu
-              - fri
-              - sat
-              - sun
+          - sat
+          - sun
 
-      close_notify_devices:
-        name: "Appareils de notification / Notification devices"
-        description: >
-          EN: mobile_app devices to notify (optional).
-          
-          FR: Appareils mobile_app à notifier (optionnel).
-        default: []
-        selector:
-          device:
-            multiple: true
-            integration: mobile_app
+  close_notify_devices:
+    name: "Fermeture - Appareils de notification / Notification devices"
+    default: []
+    selector:
+      device:
+        multiple: true
+        integration: mobile_app
 
-      close_notify_title:
-        name: "Titre notification / Notification title"
-        default: "Volets – Fermeture"
-        selector:
-          text: {}
+  close_notify_title:
+    name: "Fermeture - Titre notification / Notification title"
+    default: "Volets – Fermeture"
+    selector:
+      text: {}
 
-      close_notify_message:
-        name: "Message notification (préfixe) / Notification message (prefix)"
-        description: >
-          EN: Optional static prefix text for the notification message.
-          
-          FR: Texte de préfixe optionnel pour le message de notification.
-        default: ""
-        selector:
-          text:
-            multiline: true
+  close_notify_message:
+    name: "Fermeture - Message notification (préfixe optionnel)"
+    default: ""
+    selector:
+      text:
+        multiline: true
 
 mode: single
 
@@ -751,17 +527,19 @@ trigger:
 action:
   - variables:
       prefix: !input global_phase_prefix
+      pre_open_enabled_var: !input pre_open_enabled
+      open_enabled_var: !input open_enabled
+      pre_close_enabled_var: !input pre_close_enabled
+      close_enabled_var: !input close_enabled
 
   - choose:
 
       ############################################################
-      # PHASE 1 : PRE-OPEN
+      # PRE-OPEN
       ############################################################
       - conditions:
           - condition: template
-            value_template: "{{ trigger.id == 'pre_open' }}"
-          - condition: template
-            value_template: "{{ !input pre_open_enabled }}"
+            value_template: "{{ trigger.id == 'pre_open' and pre_open_enabled_var }}"
         sequence:
           - condition: time
             weekday: !input pre_open_weekdays
@@ -871,13 +649,11 @@ action:
                             {%- endif %}
 
       ############################################################
-      # PHASE 2 : OPEN
+      # OPEN
       ############################################################
       - conditions:
           - condition: template
-            value_template: "{{ trigger.id == 'open' }}"
-          - condition: template
-            value_template: "{{ !input open_enabled }}"
+            value_template: "{{ trigger.id == 'open' and open_enabled_var }}"
         sequence:
           - condition: time
             weekday: !input open_weekdays
@@ -987,13 +763,11 @@ action:
                             {%- endif %}
 
       ############################################################
-      # PHASE 3 : PRE-CLOSE
+      # PRE-CLOSE
       ############################################################
       - conditions:
           - condition: template
-            value_template: "{{ trigger.id == 'pre_close' }}"
-          - condition: template
-            value_template: "{{ !input pre_close_enabled }}"
+            value_template: "{{ trigger.id == 'pre_close' and pre_close_enabled_var }}"
         sequence:
           - condition: time
             weekday: !input pre_close_weekdays
@@ -1013,7 +787,7 @@ action:
               use_to_random: !input pre_close_use_to_random
               user_prefix_msg: !input pre_close_notify_message
 
-              to_pos_final: >
+                            to_pos_final: >
                 {% set base = to_pos_base | int(0) %}
                 {% if use_to_random %}
                   {% set tol = to_tol | int(0) %}
@@ -1103,13 +877,11 @@ action:
                             {%- endif %}
 
       ############################################################
-      # PHASE 4 : CLOSE
+      # CLOSE
       ############################################################
       - conditions:
           - condition: template
-            value_template: "{{ trigger.id == 'close' }}"
-          - condition: template
-            value_template: "{{ !input close_enabled }}"
+            value_template: "{{ trigger.id == 'close' and close_enabled_var }}"
         sequence:
           - condition: time
             weekday: !input close_weekdays
