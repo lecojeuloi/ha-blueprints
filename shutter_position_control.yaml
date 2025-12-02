@@ -7,9 +7,22 @@ blueprint:
     FR: Contrôle multi-phase des volets (pré-ouverture, ouverture, pré-fermeture,
     fermeture) avec positions from/to, tolérances, randomisation et notifications.
   domain: automation
-  mode: single
 
 input:
+
+  ############################################################
+  # GLOBAL
+  ############################################################
+  global_phase_prefix:
+    name: "Préfixe global / Global prefix"
+    description: >
+      EN: Optional text prefix used in notifications (e.g.: 'Extensions étage').
+
+      FR: Texte optionnel utilisé en préfixe dans les notifications
+      (ex : 'Extensions étage').
+    default: ""
+    selector:
+      text: {}
 
   ############################################################
   # SECTION 1 : PRE-OPEN
@@ -94,7 +107,7 @@ input:
         name: "Randomiser la position cible ? / Randomize target position?"
         description: >
           EN: If enabled, the final position will be randomized around the target.
-          
+
           FR: Si activé, la position finale sera randomisée autour de la cible.
         default: false
         selector:
@@ -163,7 +176,7 @@ input:
         name: "Appareils de notification / Notification devices"
         description: >
           EN: mobile_app devices to notify (optional).
-          
+
           FR: Appareils mobile_app à notifier (optionnel).
         default: []
         selector:
@@ -178,27 +191,17 @@ input:
           text: {}
 
       pre_open_notify_message:
-        name: "Message notification / Notification message"
+        name: "Message notification (préfixe) / Notification message (prefix)"
         description: >
-          EN: Jinja template. Available variables: phase_name, from_pos, to_pos,
-          moved_covers, not_moved_positions, prefix.
-          
-          FR: Template Jinja. Variables dispo : phase_name, from_pos, to_pos,
-          moved_covers, not_moved_positions, prefix.
-        default: >
-          ({{ prefix }}) Phase {{ phase_name }} vers {{ to_pos }}%.
-          Volets ayant bougé:
-          {% for c in moved_covers %}
-            - {{ c }}
-          {% endfor %}
-          Volets n'ayant pas bougé:
-          {% for c, pos in not_moved_positions.items() %}
-            - {{ c }} : {{ pos }}%
-          {% endfor %}
+          EN: Optional static prefix text for the notification message.
+
+          FR: Texte de préfixe optionnel pour le message de notification.
+        default: ""
         selector:
           text:
             multiline: true
-    ############################################################
+
+  ############################################################
   # SECTION 2 : OPEN
   ############################################################
   open_section:
@@ -365,28 +368,17 @@ input:
           text: {}
 
       open_notify_message:
-        name: "Message notification / Notification message"
+        name: "Message notification (préfixe) / Notification message (prefix)"
         description: >
-          EN: Jinja template. Available variables: phase_name, from_pos, to_pos,
-          moved_covers, not_moved_positions, prefix.
+          EN: Optional static prefix text for the notification message.
           
-          FR: Template Jinja. Variables dispo : phase_name, from_pos, to_pos,
-          moved_covers, not_moved_positions, prefix.
-        default: >
-          ({{ prefix }}) Phase {{ phase_name }} vers {{ to_pos }}%.
-          Volets ayant bougé:
-          {% for c in moved_covers %}
-            - {{ c }}
-          {% endfor %}
-          Volets n'ayant pas bougé:
-          {% for c, pos in not_moved_positions.items() %}
-            - {{ c }} : {{ pos }}%
-          {% endfor %}
+          FR: Texte de préfixe optionnel pour le message de notification.
+        default: ""
         selector:
           text:
             multiline: true
 
-    ############################################################
+  ############################################################
   # SECTION 3 : PRE-CLOSE
   ############################################################
   pre_close_section:
@@ -553,28 +545,17 @@ input:
           text: {}
 
       pre_close_notify_message:
-        name: "Message notification / Notification message"
+        name: "Message notification (préfixe) / Notification message (prefix)"
         description: >
-          EN: Jinja template. Available variables: phase_name, from_pos, to_pos,
-          moved_covers, not_moved_positions, prefix.
-          
-          FR: Template Jinja. Variables dispo : phase_name, from_pos, to_pos,
-          moved_covers, not_moved_positions, prefix.
-        default: >
-          ({{ prefix }}) Phase {{ phase_name }} vers {{ to_pos }}%.
-          Volets ayant bougé:
-          {% for c in moved_covers %}
-            - {{ c }}
-          {% endfor %}
-          Volets n'ayant pas bougé:
-          {% for c, pos in not_moved_positions.items() %}
-            - {{ c }} : {{ pos }}%
-          {% endfor %}
+          EN: Optional static prefix text for the notification message.
+
+          FR: Texte de préfixe optionnel pour le message de notification.
+        default: ""
         selector:
           text:
             multiline: true
 
-    ############################################################
+  ############################################################
   # SECTION 4 : CLOSE
   ############################################################
   close_section:
@@ -741,25 +722,498 @@ input:
           text: {}
 
       close_notify_message:
-        name: "Message notification / Notification message"
+        name: "Message notification (préfixe) / Notification message (prefix)"
         description: >
-          EN: Jinja template. Available variables: phase_name, from_pos, to_pos,
-          moved_covers, not_moved_positions, prefix.
+          EN: Optional static prefix text for the notification message.
           
-          FR: Template Jinja. Variables dispo : phase_name, from_pos, to_pos,
-          moved_covers, not_moved_positions, prefix.
-        default: >
-          ({{ prefix }}) Phase {{ phase_name }} vers {{ to_pos }}%.
-          Volets ayant bougé:
-          {% for c in moved_covers %}
-            - {{ c }}
-          {% endfor %}
-          Volets n'ayant pas bougé:
-          {% for c, pos in not_moved_positions.items() %}
-            - {{ c }} : {{ pos }}%
-          {% endfor %}
+          FR: Texte de préfixe optionnel pour le message de notification.
+        default: ""
         selector:
           text:
             multiline: true
-  
-    
+
+mode: single
+
+trigger:
+  - id: pre_open
+    platform: time
+    at: !input pre_open_time
+  - id: open
+    platform: time
+    at: !input open_time
+  - id: pre_close
+    platform: time
+    at: !input pre_close_time
+  - id: close
+    platform: time
+    at: !input close_time
+
+action:
+  - variables:
+      prefix: !input global_phase_prefix
+
+  - choose:
+
+      ############################################################
+      # PHASE 1 : PRE-OPEN
+      ############################################################
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id == 'pre_open' }}"
+          - condition: template
+            value_template: "{{ !input pre_open_enabled }}"
+        sequence:
+          - condition: time
+            weekday: !input pre_open_weekdays
+
+          - delay:
+              minutes: >
+                {{ range(0, (!input pre_open_time_random_minutes | int(0)) + 1) | random }}
+
+          - variables:
+              phase_name: "Pré-ouverture / Pre-open"
+              phase_covers: !input pre_open_covers
+              use_from: !input pre_open_use_from
+              from_pos: !input pre_open_from
+              from_tol: !input pre_open_from_tolerance
+              to_pos_base: !input pre_open_to
+              to_tol: !input pre_open_to_tolerance
+              use_to_random: !input pre_open_use_to_random
+              user_prefix_msg: !input pre_open_notify_message
+
+              to_pos_final: >
+                {% set base = to_pos_base | int(0) %}
+                {% if use_to_random %}
+                  {% set tol = to_tol | int(0) %}
+                  {% set low = [0, base - tol] | max %}
+                  {% set high = [100, base + tol] | min %}
+                  {{ range(low, high + 1) | random }}
+                {% else %}
+                  {{ base }}
+                {% endif %}
+
+              moved_covers: >
+                {% if not use_from %}
+                  {{ phase_covers }}
+                {% else %}
+                  {% set f = from_pos | int(0) %}
+                  {% set t = from_tol | int(0) %}
+                  {% set min_pos = [0, f - t] | max %}
+                  {% set max_pos = [100, f + t] | min %}
+                  {{
+                    expand(phase_covers)
+                    | selectattr('attributes.current_position','defined')
+                    | selectattr('attributes.current_position','>=', min_pos)
+                    | selectattr('attributes.current_position','<=', max_pos)
+                    | map(attribute='entity_id')
+                    | list
+                  }}
+                {% endif %}
+
+              not_moved_positions: >
+                {% set moved = moved_covers %}
+                {% set ns = namespace(out={}) %}
+                {% for c in expand(phase_covers)
+                     | rejectattr('entity_id','in', moved) %}
+                  {% set ns.out = ns.out
+                     | combine({ c.entity_id: c.attributes.current_position | default('n/a') }) %}
+                {% endfor %}
+                {{ ns.out }}
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ moved_covers | length > 0 }}"
+                sequence:
+                  - repeat:
+                      for_each: "{{ moved_covers }}"
+                      sequence:
+                        - service: cover.set_cover_position
+                          data:
+                            position: "{{ to_pos_final }}"
+                          target:
+                            entity_id: "{{ repeat.item }}"
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ (!input pre_open_notify_devices) | length > 0 }}"
+                sequence:
+                  - repeat:
+                      for_each: !input pre_open_notify_devices
+                      sequence:
+                        - device_id: "{{ repeat.item }}"
+                          domain: mobile_app
+                          type: notify
+                          title: !input pre_open_notify_title
+                          message: >
+                            {%- if user_prefix_msg %}
+                            {{ user_prefix_msg }}
+
+                            {%- endif %}
+                            [{{ prefix }}] Phase {{ phase_name }} → {{ to_pos_final }}%.
+                            Volets ayant bougé:
+                            {%- if moved_covers | length == 0 %}
+                              (aucun)
+                            {%- else %}
+                              {% for c in moved_covers %}
+                                - {{ c }}
+                              {% endfor %}
+                            {%- endif %}
+
+                            Volets n'ayant pas bougé:
+                            {%- if not_moved_positions | length == 0 %}
+                              (aucun)
+                            {%- else %}
+                              {% for c, pos in not_moved_positions.items() %}
+                                - {{ c }} : {{ pos }}%
+                              {% endfor %}
+                            {%- endif %}
+
+      ############################################################
+      # PHASE 2 : OPEN
+      ############################################################
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id == 'open' }}"
+          - condition: template
+            value_template: "{{ !input open_enabled }}"
+        sequence:
+          - condition: time
+            weekday: !input open_weekdays
+
+          - delay:
+              minutes: >
+                {{ range(0, (!input open_time_random_minutes | int(0)) + 1) | random }}
+
+          - variables:
+              phase_name: "Ouverture / Open"
+              phase_covers: !input open_covers
+              use_from: !input open_use_from
+              from_pos: !input open_from
+              from_tol: !input open_from_tolerance
+              to_pos_base: !input open_to
+              to_tol: !input open_to_tolerance
+              use_to_random: !input open_use_to_random
+              user_prefix_msg: !input open_notify_message
+
+              to_pos_final: >
+                {% set base = to_pos_base | int(0) %}
+                {% if use_to_random %}
+                  {% set tol = to_tol | int(0) %}
+                  {% set low = [0, base - tol] | max %}
+                  {% set high = [100, base + tol] | min %}
+                  {{ range(low, high + 1) | random }}
+                {% else %}
+                  {{ base }}
+                {% endif %}
+
+              moved_covers: >
+                {% if not use_from %}
+                  {{ phase_covers }}
+                {% else %}
+                  {% set f = from_pos | int(0) %}
+                  {% set t = from_tol | int(0) %}
+                  {% set min_pos = [0, f - t] | max %}
+                  {% set max_pos = [100, f + t] | min %}
+                  {{
+                    expand(phase_covers)
+                    | selectattr('attributes.current_position','defined')
+                    | selectattr('attributes.current_position','>=', min_pos)
+                    | selectattr('attributes.current_position','<=', max_pos)
+                    | map(attribute='entity_id')
+                    | list
+                  }}
+                {% endif %}
+
+              not_moved_positions: >
+                {% set moved = moved_covers %}
+                {% set ns = namespace(out={}) %}
+                {% for c in expand(phase_covers)
+                     | rejectattr('entity_id','in', moved) %}
+                  {% set ns.out = ns.out
+                     | combine({ c.entity_id: c.attributes.current_position | default('n/a') }) %}
+                {% endfor %}
+                {{ ns.out }}
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ moved_covers | length > 0 }}"
+                sequence:
+                  - repeat:
+                      for_each: "{{ moved_covers }}"
+                      sequence:
+                        - service: cover.set_cover_position
+                          data:
+                            position: "{{ to_pos_final }}"
+                          target:
+                            entity_id: "{{ repeat.item }}"
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ (!input open_notify_devices) | length > 0 }}"
+                sequence:
+                  - repeat:
+                      for_each: !input open_notify_devices
+                      sequence:
+                        - device_id: "{{ repeat.item }}"
+                          domain: mobile_app
+                          type: notify
+                          title: !input open_notify_title
+                          message: >
+                            {%- if user_prefix_msg %}
+                            {{ user_prefix_msg }}
+
+                            {%- endif %}
+                            [{{ prefix }}] Phase {{ phase_name }} → {{ to_pos_final }}%.
+                            Volets ayant bougé:
+                            {%- if moved_covers | length == 0 %}
+                              (aucun)
+                            {%- else %}
+                              {% for c in moved_covers %}
+                                - {{ c }}
+                              {% endfor %}
+                            {%- endif %}
+
+                            Volets n'ayant pas bougé:
+                            {%- if not_moved_positions | length == 0 %}
+                              (aucun)
+                            {%- else %}
+                              {% for c, pos in not_moved_positions.items() %}
+                                - {{ c }} : {{ pos }}%
+                              {% endfor %}
+                            {%- endif %}
+
+      ############################################################
+      # PHASE 3 : PRE-CLOSE
+      ############################################################
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id == 'pre_close' }}"
+          - condition: template
+            value_template: "{{ !input pre_close_enabled }}"
+        sequence:
+          - condition: time
+            weekday: !input pre_close_weekdays
+
+          - delay:
+              minutes: >
+                {{ range(0, (!input pre_close_time_random_minutes | int(0)) + 1) | random }}
+
+          - variables:
+              phase_name: "Pré-fermeture / Pre-close"
+              phase_covers: !input pre_close_covers
+              use_from: !input pre_close_use_from
+              from_pos: !input pre_close_from
+              from_tol: !input pre_close_from_tolerance
+              to_pos_base: !input pre_close_to
+              to_tol: !input pre_close_to_tolerance
+              use_to_random: !input pre_close_use_to_random
+              user_prefix_msg: !input pre_close_notify_message
+
+              to_pos_final: >
+                {% set base = to_pos_base | int(0) %}
+                {% if use_to_random %}
+                  {% set tol = to_tol | int(0) %}
+                  {% set low = [0, base - tol] | max %}
+                  {% set high = [100, base + tol] | min %}
+                  {{ range(low, high + 1) | random }}
+                {% else %}
+                  {{ base }}
+                {% endif %}
+
+              moved_covers: >
+                {% if not use_from %}
+                  {{ phase_covers }}
+                {% else %}
+                  {% set f = from_pos | int(0) %}
+                  {% set t = from_tol | int(0) %}
+                  {% set min_pos = [0, f - t] | max %}
+                  {% set max_pos = [100, f + t] | min %}
+                  {{
+                    expand(phase_covers)
+                    | selectattr('attributes.current_position','defined')
+                    | selectattr('attributes.current_position','>=', min_pos)
+                    | selectattr('attributes.current_position','<=', max_pos)
+                    | map(attribute='entity_id')
+                    | list
+                  }}
+                {% endif %}
+
+              not_moved_positions: >
+                {% set moved = moved_covers %}
+                {% set ns = namespace(out={}) %}
+                {% for c in expand(phase_covers)
+                     | rejectattr('entity_id','in', moved) %}
+                  {% set ns.out = ns.out
+                     | combine({ c.entity_id: c.attributes.current_position | default('n/a') }) %}
+                {% endfor %}
+                {{ ns.out }}
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ moved_covers | length > 0 }}"
+                sequence:
+                  - repeat:
+                      for_each: "{{ moved_covers }}"
+                      sequence:
+                        - service: cover.set_cover_position
+                          data:
+                            position: "{{ to_pos_final }}"
+                          target:
+                            entity_id: "{{ repeat.item }}"
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ (!input pre_close_notify_devices) | length > 0 }}"
+                sequence:
+                  - repeat:
+                      for_each: !input pre_close_notify_devices
+                      sequence:
+                        - device_id: "{{ repeat.item }}"
+                          domain: mobile_app
+                          type: notify
+                          title: !input pre_close_notify_title
+                          message: >
+                            {%- if user_prefix_msg %}
+                            {{ user_prefix_msg }}
+
+                            {%- endif %}
+                            [{{ prefix }}] Phase {{ phase_name }} → {{ to_pos_final }}%.
+                            Volets ayant bougé:
+                            {%- if moved_covers | length == 0 %}
+                              (aucun)
+                            {%- else %}
+                              {% for c in moved_covers %}
+                                - {{ c }}
+                              {% endfor %}
+                            {%- endif %}
+
+                            Volets n'ayant pas bougé:
+                            {%- if not_moved_positions | length == 0 %}
+                              (aucun)
+                            {%- else %}
+                              {% for c, pos in not_moved_positions.items() %}
+                                - {{ c }} : {{ pos }}%
+                              {% endfor %}
+                            {%- endif %}
+
+      ############################################################
+      # PHASE 4 : CLOSE
+      ############################################################
+      - conditions:
+          - condition: template
+            value_template: "{{ trigger.id == 'close' }}"
+          - condition: template
+            value_template: "{{ !input close_enabled }}"
+        sequence:
+          - condition: time
+            weekday: !input close_weekdays
+
+          - delay:
+              minutes: >
+                {{ range(0, (!input close_time_random_minutes | int(0)) + 1) | random }}
+
+          - variables:
+              phase_name: "Fermeture / Close"
+              phase_covers: !input close_covers
+              use_from: !input close_use_from
+              from_pos: !input close_from
+              from_tol: !input close_from_tolerance
+              to_pos_base: !input close_to
+              to_tol: !input close_to_tolerance
+              use_to_random: !input close_use_to_random
+              user_prefix_msg: !input close_notify_message
+
+              to_pos_final: >
+                {% set base = to_pos_base | int(0) %}
+                {% if use_to_random %}
+                  {% set tol = to_tol | int(0) %}
+                  {% set low = [0, base - tol] | max %}
+                  {% set high = [100, base + tol] | min %}
+                  {{ range(low, high + 1) | random }}
+                {% else %}
+                  {{ base }}
+                {% endif %}
+
+              moved_covers: >
+                {% if not use_from %}
+                  {{ phase_covers }}
+                {% else %}
+                  {% set f = from_pos | int(0) %}
+                  {% set t = from_tol | int(0) %}
+                  {% set min_pos = [0, f - t] | max %}
+                  {% set max_pos = [100, f + t] | min %}
+                  {{
+                    expand(phase_covers)
+                    | selectattr('attributes.current_position','defined')
+                    | selectattr('attributes.current_position','>=', min_pos)
+                    | selectattr('attributes.current_position','<=', max_pos)
+                    | map(attribute='entity_id')
+                    | list
+                  }}
+                {% endif %}
+
+              not_moved_positions: >
+                {% set moved = moved_covers %}
+                {% set ns = namespace(out={}) %}
+                {% for c in expand(phase_covers)
+                     | rejectattr('entity_id','in', moved) %}
+                  {% set ns.out = ns.out
+                     | combine({ c.entity_id: c.attributes.current_position | default('n/a') }) %}
+                {% endfor %}
+                {{ ns.out }}
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ moved_covers | length > 0 }}"
+                sequence:
+                  - repeat:
+                      for_each: "{{ moved_covers }}"
+                      sequence:
+                        - service: cover.set_cover_position
+                          data:
+                            position: "{{ to_pos_final }}"
+                          target:
+                            entity_id: "{{ repeat.item }}"
+
+          - choose:
+              - conditions:
+                  - condition: template
+                    value_template: "{{ (!input close_notify_devices) | length > 0 }}"
+                sequence:
+                  - repeat:
+                      for_each: !input close_notify_devices
+                      sequence:
+                        - device_id: "{{ repeat.item }}"
+                          domain: mobile_app
+                          type: notify
+                          title: !input close_notify_title
+                          message: >
+                            {%- if user_prefix_msg %}
+                            {{ user_prefix_msg }}
+
+                            {%- endif %}
+                            [{{ prefix }}] Phase {{ phase_name }} → {{ to_pos_final }}%.
+                            Volets ayant bougé:
+                            {%- if moved_covers | length == 0 %}
+                              (aucun)
+                            {%- else %}
+                              {% for c in moved_covers %}
+                                - {{ c }}
+                              {% endfor %}
+                            {%- endif %}
+
+                            Volets n'ayant pas bougé:
+                            {%- if not_moved_positions | length == 0 %}
+                              (aucun)
+                            {%- else %}
+                              {% for c, pos in not_moved_positions.items() %}
+                                - {{ c }} : {{ pos }}%
+                              {% endfor %}
+                            {%- endif %}
