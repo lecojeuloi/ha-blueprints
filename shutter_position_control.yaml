@@ -1,57 +1,57 @@
 blueprint:
-  name: Shutter Position Control (generic, single notification)
+  name: Shutter Phase Control (generic, with tolerance & randomization)
   description: >
-    EN: Move selected shutters to a target position at a specific time, with optional
-    weekday filter, optional calendar filter, optional starting position filter,
-    and a single customizable notification.  
-    FR: Déplace une sélection de volets vers une position cible à une heure donnée,
-    avec filtrage optionnel par jours de la semaine, filtre calendrier optionnel,
-    filtre optionnel sur la position de départ, et une seule notification
-    personnalisable.
+    EN: Control a group of shutters as a single "phase" (e.g. pre-open, open,
+    pre-close, close). Move selected shutters to a target position at a given
+    time, with optional starting position filter, tolerance in %, time
+    randomization, position randomization and a single customizable notification.  
+    FR: Contrôle un groupe de volets comme une "phase" (pré-ouverture, ouverture,
+    pré-fermeture, fermeture). Déplace une sélection de volets vers une position
+    cible à une heure donnée, avec filtre optionnel sur la position de départ,
+    tolérance en %, randomisation du temps, randomisation de la position et une
+    notification unique personnalisable.
 
   domain: automation
 
   input:
+    phase_name:
+      name: Phase name / Nom de la phase
+      description: >
+        EN: Logical name for this phase (e.g. "Pre-open", "Open", "Pre-close").  
+        FR: Nom logique de cette phase (ex: "Pré-ouverture", "Ouverture").
+      default: Shutter phase
+      selector:
+        text: {}
+
     covers:
       name: Target shutters / Volets ciblés
       description: >
-        EN: Shutters controlled by this automation.  
-        FR: Volets qui seront contrôlés par cette automatisation.
+        EN: Shutters controlled by this phase.  
+        FR: Volets contrôlés par cette phase.
       selector:
         entity:
           domain: cover
           multiple: true
 
-    to_position:
-      name: Target position / Position cible
-      description: >
-        EN: Position to apply to shutters that match the conditions.  
-        FR: Position à appliquer aux volets qui respectent les conditions.
-      default: 40
-      selector:
-        number:
-          min: 0
-          max: 100
-          unit_of_measurement: "%"
+    # --- Position logic ---
 
     use_from_position:
-      name: Filter by starting position? / Filtrer par position de départ ?
+      name: Use starting position filter? / Filtrer par position de départ ?
       description: >
-        EN: If enabled, only shutters currently at the specified starting position
-        will move. If disabled, all selected shutters will move.  
-        FR: Si activé, seuls les volets actuellement à la position de départ
-        spécifiée bougeront. Si désactivé, tous les volets sélectionnés bougeront.
+        EN: If enabled, only shutters within the "from position ± tolerance"
+        range will move. If disabled, all selected shutters will move.  
+        FR: Si activé, seuls les volets dont la position est dans
+        "position de départ ± tolérance" bougeront. Si désactivé, tous les
+        volets sélectionnés bougeront.
       default: true
       selector:
         boolean: {}
 
     from_position:
-      name: Starting position (if enabled) / Position de départ (si activée)
+      name: From position / Position de départ
       description: >
-        EN: Only shutters currently at this position will move when
-        "Filter by starting position" is enabled.  
-        FR: Seuls les volets actuellement à cette position bougeront lorsque
-        "Filtrer par position de départ" est activé.
+        EN: Required starting position (in %) when the filter is enabled.  
+        FR: Position de départ requise (en %) lorsque le filtre est activé.
       default: 0
       selector:
         number:
@@ -59,19 +59,93 @@ blueprint:
           max: 100
           unit_of_measurement: "%"
 
+    from_tolerance:
+      name: From tolerance / Tolérance de départ
+      description: >
+        EN: Allowed deviation around "from position", in percentage points.
+        Example: from=40, tolerance=1 → 39–41 are accepted.  
+        FR: Marge autour de la position de départ, en points de pourcentage.
+        Exemple: from=40, tolérance=1 → 39 à 41 acceptés.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 20
+          unit_of_measurement: "%"
+
+    to_position:
+      name: Target position / Position cible
+      description: >
+        EN: Center target position (in %) shutters should move to.  
+        FR: Position cible centrale (en %) vers laquelle les volets doivent aller.
+      default: 40
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+    use_to_randomization:
+      name: Randomize target position? / Randomiser la position cible ?
+      description: >
+        EN: If enabled, each shutter will get a random position within
+        [to_position - to_tolerance, to_position + to_tolerance].  
+        FR: Si activé, chaque volet aura une position aléatoire dans
+        [position_cible - tolérance_cible, position_cible + tolérance_cible].
+      default: false
+      selector:
+        boolean: {}
+
+    to_tolerance:
+      name: Target tolerance / Tolérance de la position cible
+      description: >
+        EN: Max deviation for randomized target position (percentage points).  
+        FR: Déviation maximale pour la position cible randomisée (en %).
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 20
+          unit_of_measurement: "%"
+
+    # --- Time & randomization ---
+
     trigger_time:
       name: Trigger time / Heure de déclenchement
       description: >
-        EN: Time at which shutters will be checked and possibly moved.  
-        FR: Heure à laquelle les volets seront vérifiés et éventuellement déplacés.
+        EN: Base time when this phase should run.  
+        FR: Heure de base à laquelle cette phase doit s'exécuter.
       selector:
         time: {}
+
+    time_randomization_enabled:
+      name: Enable time randomization? / Activer la randomisation du temps ?
+      description: >
+        EN: If enabled, execution will be delayed by a random duration between
+        0 and N minutes after the base time.  
+        FR: Si activé, l'exécution sera retardée d'une durée aléatoire entre
+        0 et N minutes après l'heure de base.
+      default: false
+      selector:
+        boolean: {}
+
+    time_randomization_max_minutes:
+      name: Max random delay (minutes) / Retard aléatoire max (minutes)
+      description: >
+        EN: Maximum random delay after the trigger time (0..N minutes).  
+        FR: Retard aléatoire maximum après l’heure de déclenchement (0..N minutes).
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 60
+          unit_of_measurement: "min"
 
     weekdays:
       name: Weekdays / Jours de la semaine
       description: >
-        EN: Days on which this automation should run.  
-        FR: Jours durant lesquels cette automatisation doit s'exécuter.
+        EN: Days on which this phase should run.  
+        FR: Jours durant lesquels cette phase doit s'exécuter.
       default:
         - mon
         - tue
@@ -90,12 +164,14 @@ blueprint:
             - sat
             - sun
 
+    # --- Optional calendar filter ---
+
     use_calendar:
       name: Use calendar filter? / Utiliser un filtre calendrier ?
       description: >
-        EN: If enabled, the automation only runs when the selected calendar
-        is in the required state.  
-        FR: Si activé, l'automatisation ne s'exécute que si le calendrier choisi
+        EN: If enabled, the phase only runs when the selected calendar has
+        the required state.  
+        FR: Si activé, la phase ne s'exécute que si le calendrier sélectionné
         est dans l'état requis.
       default: false
       selector:
@@ -104,8 +180,8 @@ blueprint:
     calendar_entity:
       name: Calendar entity / Entité calendrier
       description: >
-        EN: Calendar used as an optional filter (e.g. school holidays).  
-        FR: Calendrier utilisé comme filtre optionnel (ex: vacances scolaires).
+        EN: Optional calendar used as a condition (e.g. school holidays).  
+        FR: Calendrier optionnel utilisé comme condition (ex: vacances scolaires).
       default: ""
       selector:
         entity:
@@ -115,19 +191,21 @@ blueprint:
     calendar_required_state:
       name: Required calendar state / État requis du calendrier
       description: >
-        EN: Example: "off" for school days (not holidays).  
-        FR: Exemple: "off" pour les jours d'école (hors vacances).
+        EN: Required state of the calendar (e.g. "off" for school days).  
+        FR: État requis du calendrier (ex: "off" pour les jours d'école).
       default: "off"
       selector:
         text: {}
 
+    # --- Notification (single, optional) ---
+
     enable_notification:
       name: Enable notification? / Activer la notification ?
       description: >
-        EN: If enabled, a single notification will be sent with both moved and
-        non-moved shutters.  
-        FR: Si activé, une seule notification sera envoyée avec la liste des
-        volets ayant bougé et ceux n'ayant pas bougé.
+        EN: If enabled, a single notification will be sent, listing shutters
+        that moved and shutters that did not move (with position).  
+        FR: Si activé, une seule notification sera envoyée listant les volets
+        qui ont bougé et ceux qui n'ont pas bougé (avec leur position).
       default: true
       selector:
         boolean: {}
@@ -135,10 +213,10 @@ blueprint:
     notify_device:
       name: Notification device / Appareil de notification
       description: >
-        EN: Mobile device to notify (mobile_app). Required only if notifications
-        are enabled.  
-        FR: Appareil mobile à notifier (mobile_app). Requis uniquement si les
-        notifications sont activées.
+        EN: Mobile device to notify (mobile_app). Required only if notification
+        is enabled.  
+        FR: Appareil mobile à notifier (mobile_app). Requis uniquement si la
+        notification est activée.
       selector:
         device:
           integration: mobile_app
@@ -148,20 +226,22 @@ blueprint:
       description: >
         EN: Title of the notification.  
         FR: Titre de la notification.
-      default: Volets / Shutters
+      default: Shutters / Volets
       selector:
         text: {}
 
     notify_message_template:
-      name: Notification message template / Modèle du message de notification
+      name: Notification message template / Modèle de message de notification
       description: >
-        EN: Template for the notification body. You can use these variables:
-        {{ from_pos }}, {{ to_pos }}, {{ moved_covers }}, {{ not_moved_positions }}.  
+        EN: Template for the notification body. You can use variables:
+        {{ phase_name }}, {{ from_pos }}, {{ to_pos }}, {{ moved_covers }},
+        {{ not_moved_positions }}.  
         FR: Modèle pour le corps de la notification. Variables disponibles :
-        {{ from_pos }}, {{ to_pos }}, {{ moved_covers }}, {{ not_moved_positions }}.
+        {{ phase_name }}, {{ from_pos }}, {{ to_pos }}, {{ moved_covers }},
+        {{ not_moved_positions }}.
 
         Example (FR):
-        "Ouverture auto à {{ to_pos }}%.
+        "Ouverture auto (phase: {{ phase_name }}) à {{ to_pos }}%.
          Volets ayant bougé:
          {% for c in moved_covers %}
            - {{ c }}
@@ -172,7 +252,7 @@ blueprint:
          {% endfor %}"
 
         Example (EN):
-        "Automatic move to {{ to_pos }}%.
+        "Automatic move (phase: {{ phase_name }}) to {{ to_pos }}%.
          Moved shutters:
          {% for c in moved_covers %}
            - {{ c }}
@@ -182,7 +262,7 @@ blueprint:
            - {{ c }} ({{ pos }}%)
          {% endfor %}"
       default: >
-        Automatic move to {{ to_pos }}%.
+        Automatic move (phase: {{ phase_name }}) to {{ to_pos }}%.
         Moved shutters:
         {% for c in moved_covers %}
           - {{ c }}
@@ -216,7 +296,7 @@ conditions:
       - condition: template
         value_template: "{{ not (!input use_calendar) }}"
       # Case 2: calendar filter enabled -> require matching state
-      # Cas 2: filtre calendrier activé -> état requis
+      # Cas 2: filtre calendrier activé -> nécessite l'état requis
       - condition: template
         value_template: >
           {% if !input use_calendar %}
@@ -226,41 +306,57 @@ conditions:
           {% endif %}
 
 action:
+  # EN: Optional random delay after trigger time (0..N minutes)
+  # FR: Retard aléatoire optionnel après l'heure de déclenchement (0..N minutes)
+  - if:
+      - condition: template
+        value_template: "{{ !input time_randomization_enabled }}"
+    then:
+      - delay: >
+          {% set maxm = !input time_randomization_max_minutes | int(0) %}
+          {% if maxm > 0 %}
+            00:{{ '%02d' | format(range(0, maxm + 1) | random) }}:00
+          {% else %}
+            00:00:00
+          {% endif %}
+
   - variables:
-      # EN: List of shutter entity_ids from the input
-      # FR: Liste des entity_id des volets depuis l'entrée utilisateur
+      phase_name: !input phase_name
       covers: !input covers
 
-      to_pos: !input to_position
       use_from: !input use_from_position
       from_pos: !input from_position
+      from_tol: !input from_tolerance
 
-      # EN: Determine which shutters will move:
-      #     - if use_from_position = true -> only those at from_pos
-      #     - else -> all covers
-      # FR: Détermine quels volets vont bouger :
-      #     - si use_from_position = true -> seulement ceux à from_pos
-      #     - sinon -> tous les volets
+      to_pos: !input to_position
+      use_to_rand: !input use_to_randomization
+      to_tol: !input to_tolerance
+
+      # EN: Compute shutters that should move
+      # FR: Calcule les volets qui doivent bouger
       moved_covers: >
         {% if use_from %}
+          {% set low = from_pos - from_tol %}
+          {% set high = from_pos + from_tol %}
           {{ expand(covers)
              | selectattr('attributes.current_position','defined')
-             | selectattr('attributes.current_position','eq', from_pos)
+             | selectattr('attributes.current_position','ge', low)
+             | selectattr('attributes.current_position','le', high)
              | map(attribute='entity_id')
              | list }}
         {% else %}
           {{ covers }}
         {% endif %}
 
-      # EN: Shutters that do NOT move (for information in the notification)
-      # FR: Volets qui ne bougent PAS (pour information dans la notification)
+      # EN: Shutters that will NOT move (informational)
+      # FR: Volets qui ne bougent PAS (informatif)
       not_moved_covers: >
         {{ expand(covers)
            | rejectattr('entity_id','in', moved_covers)
            | map('attr','entity_id')
            | list }}
 
-      # EN: Positions of shutters that do NOT move
+      # EN: Positions of shutters that do not move
       # FR: Positions des volets qui ne bougent pas
       not_moved_positions: >
         {% set ns = namespace(out={}) %}
@@ -273,12 +369,14 @@ action:
   - choose:
       - conditions:
           # EN: Only move if at least one shutter should move
-          # FR: On ne bouge que si au moins un volet doit bouger
+          # FR: On ne fait bouger que si au moins un volet doit bouger
           - condition: template
             value_template: "{{ moved_covers | length > 0 }}"
         sequence:
           # EN: Move all selected/matching shutters to target position
-          # FR: Déplace tous les volets sélectionnés / correspondants vers la position cible
+          #     with optional randomization per shutter.
+          # FR: Déplace tous les volets sélectionnés/correspondants vers la
+          #     position cible, avec randomisation optionnelle par volet.
           - repeat:
               for_each: "{{ moved_covers }}"
               sequence:
@@ -286,10 +384,17 @@ action:
                   target:
                     entity_id: "{{ repeat.item }}"
                   data:
-                    position: "{{ to_pos }}"
+                    position: >
+                      {% if use_to_rand and to_tol > 0 %}
+                        {% set low = [0, to_pos - to_tol] | max %}
+                        {% set high = [100, to_pos + to_tol] | min %}
+                        {{ range(low|int, high|int + 1) | random }}
+                      {% else %}
+                        {{ to_pos }}
+                      {% endif %}
 
-  # EN: Optional single notification (both moved and not moved)
-  # FR: Notification unique optionnelle (volets bougés et non bougés)
+  # EN: Single optional notification
+  # FR: Notification unique optionnelle
   - if:
       - condition: template
         value_template: "{{ !input enable_notification }}"
